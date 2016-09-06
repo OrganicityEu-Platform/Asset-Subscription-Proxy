@@ -89,6 +89,7 @@ var Root = (function () {
                             }
                             log.error(status);
                             log.error(e);
+                            log.error(this.asset);
                             res.send(400, e);
                             return;
                         }.bind({assetId: assetId, asset: asset, type: type, options: options, res: res, req:req})
@@ -96,6 +97,7 @@ var Root = (function () {
                 }
                 log.error(status);
                 log.error(e);
+                log.error(this.asset);
                 res.send(400, e);
                 return;
             }.bind({assetId: assetId, asset: asset, type: type, options: options, res: res, req:req})
