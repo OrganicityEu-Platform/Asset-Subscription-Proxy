@@ -52,7 +52,7 @@ app.use(function (req, res, next) {
 var port = config.proxy_port || 80;
 app.set('port', port);
 
-app.all('/*', Root.pep);
+app.all('/*', Root.getAccessToken, Root.pep);
 log.info('Starting Organicity Subscription Proxy in port ' + port + ' ...');
 app.listen(app.get('port'));
 

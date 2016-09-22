@@ -3,6 +3,30 @@ var config = require('./../config.js'),
 var log = require('./../lib/logger').logger.getLogger("Organicity-subscription-proxy");
 
 var Root = (function () {
+
+    var getAccessToken = function(req, res, next) {
+	var options = {
+		host: 'accounts.organicity.eu', // 31.200.243.82
+		port: '443',
+		path: '/realms/organicity/protocol/openid-connect/token',
+		method: 'POST',
+		headers: {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		}
+	};
+
+	var payload = 'grant_type=client_credentials&client_id=' + config.client_id + '&client_secret=' + config.client_secret;
+
+	proxy.sendData('https', options, payload, res, function (status, responseText) {
+                console.log('Access Token received');
+   		var token = JSON.parse(responseText);
+    		req.access_token = token.access_token;
+		console.log(req.access_token);
+		next();
+	});
+
+    };
+
     var pep = function (req, res) {
         var options = {
             host: config.asset_directory_host,
@@ -11,6 +35,11 @@ var Root = (function () {
             method: req.method,
             headers: proxy.getClientIp(req, req.headers)
         };
+
+	options.headers['authorization'] = 'Bearer ' + req.access_token;
+
+	console.log('Options:', options);
+
         if (req.body.length > 0) {
             //log.info(req.body.toString());
             var assets;
@@ -106,7 +135,8 @@ var Root = (function () {
     }
 
     return {
-        pep: pep
+        pep: pep,
+	getAccessToken: getAccessToken
     }
 })();
 
