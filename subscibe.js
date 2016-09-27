@@ -15,7 +15,7 @@ var payloadJson = {
   },
   "notification": {
     "http": {
-      "url": "http://localhost:" + config.proxy_port
+      "url": config.subscription_url
     }
   },
   "expires": "2018-04-05T14:00:00.00Z",

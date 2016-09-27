@@ -17,4 +17,7 @@ config.orion_host = 'localhost';
 config.orion_port = 1026;
 config.orion_protocol = 'http';
 
+// Change this, if this proxy runs on a differnt machine.
+config.subscription_url = "http://localhost:" + config.proxy_port;
+
 module.exports = config;
