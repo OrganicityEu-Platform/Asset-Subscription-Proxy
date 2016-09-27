@@ -1,10 +1,20 @@
 var config = {};
-config.proxy_port = 9998;
+
+// The port, on which the proxy runs
+config.proxy_port = 9999;
+
+// The ClientId and ClientSecret
+config.client_id = '';
+config.client_secret = '';
+
+// Configure the Asset Directory, to which the Assets should be pushed
 config.asset_directory_host = 'dev.orion.organicity.eu';
 config.asset_directory_port = '443';
 config.asset_directory_protocol = 'https';
 
-config.client_id = '';
-config.client_secret = '';
+// Configure your Orion here
+config.orion_host = 'localhost';
+config.orion_port = 1026;
+config.orion_protocol = 'http';
 
 module.exports = config;
