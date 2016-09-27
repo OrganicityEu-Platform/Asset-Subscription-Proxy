@@ -72,7 +72,7 @@ var Root = (function () {
         delete asset.id;
         delete asset.type;
         var payload = JSON.stringify(asset);
-        proxy.sendData('http', options, payload, res,
+        proxy.sendData(config.asset_directory_protocol, options, payload, res,
             function (status, e) {
                 if (status == 201 || status == 204) {
                     log.info("Asset Updated:" + this.assetId);
@@ -94,7 +94,7 @@ var Root = (function () {
                     this.asset.type = this.type;
                     this.options.path=this.req.url + 'v2/entities/';
                     var payload = JSON.stringify(asset);
-                    proxy.sendData('http', this.options, payload, this.res,
+                    proxy.sendData(config.asset_directory_protocol, this.options, payload, this.res,
                         function (status, e) {
                             if (status == 201 || status == 204) {
                                 log.info("Asset Created:" + this.assetId);
