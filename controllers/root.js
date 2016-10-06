@@ -4,138 +4,156 @@ var log = require('./../lib/logger').logger.getLogger("Organicity-subscription-p
 
 var Root = (function () {
 
-    var getAccessToken = function(req, res, next) {
-	var options = {
-		host: 'accounts.organicity.eu', // 31.200.243.82
-		port: '443',
-		path: '/realms/organicity/protocol/openid-connect/token',
-		method: 'POST',
-		headers: {
-			'Content-Type' : 'application/x-www-form-urlencoded'
-		}
-	};
-
-	var payload = 'grant_type=client_credentials&client_id=' + config.client_id + '&client_secret=' + config.client_secret;
-
-	proxy.sendData('https', options, payload, res, function (status, responseText) {
-//                console.log('Access Token received');
-   		var token = JSON.parse(responseText);
-    		req.access_token = token.access_token;
-//		console.log(req.access_token);
-		next();
-	});
-
+  // Get the Access Token
+  var getAccessToken = function(req, res, next) {
+    var options = {
+      host: 'accounts.organicity.eu', // 31.200.243.82
+      port: '443',
+      path: '/realms/organicity/protocol/openid-connect/token',
+      method: 'POST',
+      headers: {
+        'Content-Type' : 'application/x-www-form-urlencoded'
+      }
     };
 
-    var pep = function (req, res) {
-        var options = {
-            host: config.asset_directory_host,
-            port: config.asset_directory_port,
-            path: req.url + 'v2/entities/',
-            method: req.method,
-            headers: proxy.getClientIp(req, req.headers)
-        };
+    var payload = 'grant_type=client_credentials&client_id=' + config.client_id + '&client_secret=' + config.client_secret;
 
-	options.headers['authorization'] = 'Bearer ' + req.access_token;
+    proxy.sendData('https', options, payload, res, function (status, responseText) {
+      var token = JSON.parse(responseText);
+      req.access_token = token.access_token;
+      next();
+    });
+  };
 
-        if (req.body.length > 0) {
-            //log.info(req.body.toString());
-            var assets;
-
-            try {
-                assets = JSON.parse(req.body);
-            } catch (e) {
-                log.error(e);
-		res.status(400).send(e);
-            }
-            if (assets != undefined && assets.data != undefined && assets.data.length >= 1) {
-                for (var i = 0; i < assets.data.length; i++) {
-                    var asset = assets.data[i];
-                    var type = asset.type;
-                    var assetId = asset.id;
-                    updateAsset(options, asset, res, req, assetId, type);
-                }
-            }
-        } else {
-	    res.status(400).send("No Asset Info");
-        }
+  var getAssetFromBody = function (req, res, next) {
+    if (req.body.length > 0) {
+      try {
+        req.asset = JSON.parse(req.body);
+      } catch (e) {
+        log.error(e);
+        res.status(400).send(e);
         return;
+      }
     }
+    next();
+  };
 
-    var updateAsset = function (options, asset, res, req, assetId, type) {
-        options.path = req.url + 'v2/entities/' + assetId + '/attrs';
-        // options.path = req.url + 'v2/entities/' + assetId + '?type=' + type; //not implemented yet at Orion
-        options.method = 'POST';
-        log.info("Asset Creating: " + assetId);
-        delete asset.id;
-        delete asset.type;
-        var payload = JSON.stringify(asset);
-        proxy.sendData(config.asset_directory_protocol, options, payload, res,
-            function (status, e) {
-                if (status == 201 || status == 204) {
-                    log.info("Asset Updated: " + this.assetId);
-                    res.status(200).send("Asset Updated:" + this.assetId);
-                    return;
-                }
-                log.error(status);
-                log.error(e);
-                res.status(400).send(e);
-                return;
-            }.bind({assetId: assetId}),
-            function (status, e) {
-                if (status == 201 || status == 204) {
-                    log.info("Asset Updated:");
-                    res.status(200).send("Asset Updated");
-                    return;
-                } else if (status == 404) {
-                    this.asset.id = this.assetId;
-                    this.asset.type = this.type;
-                    this.options.path=this.req.url + 'v2/entities/';
-                    var payload = JSON.stringify(asset);
-                    proxy.sendData(config.asset_directory_protocol, this.options, payload, this.res,
-                        function (status, e) {
-                            if (status == 201 || status == 204) {
-                                log.info("Asset Created: " + this.assetId);
-                                res.status(200).send("Asset Created:" + this.assetId);
-                                return;
-                            }
-                            log.error(status);
-                            log.error(e);
-                            res.status(400).send(e);
-                            return;
-                        }.bind({assetId: assetId}),
-                        function (status, e) {
-                            if (status == 201 || status == 204) {
-                                log.info("Asset Created:");
-                                res.status(200).send("Asset Created");
-                                return;
-                            } else if (status == 404) {
-                                this.asset.id = this.assetId;
-                                this.asset.type = this.type;
-                            }
-                            log.error(status);
-                            log.error(e);
-                            log.error(this.asset);
-                            res.status(400).send(e);
-                            return;
-                        }.bind({assetId: assetId, asset: asset, type: type, options: options, res: res, req:req})
-                    );
-                } else {
-                	log.error(status);
-                	log.error(e);
-                	log.error(this.asset);
-                	res.status(400).send(e);
-                	return;
-		}
-            }.bind({assetId: assetId, asset: asset, type: type, options: options, res: res, req:req})
-        );
-        return
-    }
+  var update = function (req, res, next) {
 
-    return {
-        pep: pep,
-	getAccessToken: getAccessToken
-    }
+    var options = {
+      host: config.asset_directory_host,
+      port: config.asset_directory_port,
+      path: '/v2/entities/' + req.params.assetId + '/attrs',
+      method: 'POST',
+      headers: proxy.getClientIp(req, req.headers)
+    };
+
+    // Add auth header
+    options.headers['authorization'] = 'Bearer ' + req.access_token;
+
+    log.info("Asset updating: " +  req.params.assetId);
+
+    delete req.asset.id;
+    delete req.asset.type;
+    var payload = JSON.stringify(req.asset);
+    proxy.sendData(config.asset_directory_protocol, options, payload, res,
+      function (status, e) {
+        if (status == 201 || status == 204) {
+          log.info("Asset updated: " + this.assetId);
+          res.status(200).send("Asset updated: " + this.assetId);
+          return;
+        }
+        log.error(status);
+        log.error(e);
+        res.status(400).send(e);
+      }.bind({assetId: req.params.assetId}),
+      function (status, e) {
+        log.error(status);
+        log.error(e);
+        log.error(this.asset);
+        res.status(400).send(e);
+      }.bind({assetId: req.params.assetId, asset: req.asset})
+    );
+  };
+
+  var create = function (req, res, next) {
+    // options.path = req.url + 'v2/entities/' + assetId + '?type=' + type; //not implemented yet at Orion
+    var options = {
+      host: config.asset_directory_host,
+      port: config.asset_directory_port,
+      path: '/v2/entities',
+      method: 'POST',
+      headers: proxy.getClientIp(req, req.headers)
+    };
+
+    // Add auth header
+    options.headers['authorization'] = 'Bearer ' + req.access_token;
+
+    log.info("Asset creating: " + req.asset.id);
+    var payload = JSON.stringify(req.asset);
+    proxy.sendData(config.asset_directory_protocol, options, payload, res,
+      function (status, e) {
+        if (status == 201 || status == 204) {
+          log.info("Asset created: " + this.assetId);
+          res.status(200).send("Asset created:" + this.assetId);
+          return;
+        }
+        log.error(status);
+        log.error(e);
+        res.status(400).send(e);
+      }.bind({assetId: req.asset.id}),
+      function (status, e) {
+        log.error(status);
+        log.error(e);
+        log.error(this.asset);
+        res.status(400).send(e);
+      }.bind({assetId: req.asset.id, asset: req.asset})
+    );
+  };
+
+  var remove = function(req, res, next) {
+    var options = {
+      host: config.asset_directory_host,
+      port: config.asset_directory_port,
+      path: '/v2/entities',
+      method: 'DELETE',
+      headers: proxy.getClientIp(req, req.headers)
+    };
+
+    // Add auth header
+    options.headers['authorization'] = 'Bearer ' + req.access_token;
+
+    log.info("Asset deletion: " + req.asset.id);
+    var payload = JSON.stringify(req.asset);
+    proxy.sendData(config.asset_directory_protocol, options, payload, res,
+      function (status, e) {
+        if (status == 201 || status == 204) {
+          log.info("Asset deleted: " + this.assetId);
+          res.status(200).send("Asset deleted:" + this.assetId);
+          return;
+        }
+        log.error(status);
+        log.error(e);
+        res.status(400).send(e);
+      }.bind({assetId: req.asset.id}),
+      function (status, e) {
+        log.error(status);
+        log.error(e);
+        log.error(this.asset);
+        res.status(400).send(e);
+      }.bind({assetId: req.asset.id, asset: req.asset})
+    );
+
+  }
+
+  var chains = {
+    create : [getAccessToken, getAssetFromBody, create],
+    update : [getAccessToken, getAssetFromBody, update],
+    remove : [getAccessToken, remove]
+  };
+
+  //console.log(chains);
+  return chains;
 })();
 
 exports.Root = Root;
