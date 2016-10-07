@@ -30,15 +30,22 @@ var Root = (function () {
     if (req.body.length > 0) {
       try {
         // On notification, Orions gets an array of Assets
-        req.assets = JSON.parse(req.body);
-        console.log('Assets:');
-        console.log(req.assets);
-        next();
+        var body = JSON.parse(req.body);
+        if (body != undefined && body.data != undefined && body.data.length >= 1) {
+          req.assets = body.data;
+          //console.log('Assets:', req.assets);
+          console.log('#Assets:', req.assets.length);
+          next();
+          return;
+        } else {
+          res.status(400).send('Body wrong!');
+          return;
+        }
       } catch (e) {
         log.error(e);
         res.status(400).send(e);
+        return;
       }
-      return;
     }
     res.status(400).send('Body is not allowed to be emty!');
   };
@@ -48,15 +55,19 @@ var Root = (function () {
     var nextAsset = function() {
       var asset = req.assets[i];
       if(asset) {
+        console.log('Handle asset #' + i);
+        //console.log(asset);
         i++;
-        updateAsset(asset, nextAsset);
+        updateAsset(asset, req, nextAsset);
       } else {
+        console.log('All assets handled!');
         res.status(200).send("All assets handled!");
       }
     }
+    nextAsset();
   };
 
-  var updateAsset = function(asset, callback) {
+  var updateAsset = function(asset, req, callback) {
 
     console.log('### Try to update asset');
 
@@ -81,7 +92,7 @@ var Root = (function () {
     log.info("Asset updating: " +  asset_id);
 
     var payload = JSON.stringify(asset);
-    proxy.sendData(config.asset_directory_protocol, options, payload, res,
+    proxy.sendData(config.asset_directory_protocol, options, payload, undefined,
       function (status, e) {
         if (status == 201 || status == 204) {
           log.info("Asset updated: " + this.assetId);
@@ -94,16 +105,21 @@ var Root = (function () {
       }.bind({assetId: asset_id}),
       function (status, e) {
 
+        console.log('Update failed.');
+
         // Reset the id and type
         asset.id = asset_id;
         asset.type = asset_type;
 
-        createAsset(asset, callback);
+        createAsset(asset, req, callback);
       }
     );
   };
 
-  var createAsset = function (asset, callback) {
+  var createAsset = function (asset, req, callback) {
+
+    console.log('### Try to create asset');
+
     // options.path = req.url + 'v2/entities/' + assetId + '?type=' + type; //not implemented yet at Orion
     var options = {
       host: config.asset_directory_host,
@@ -118,7 +134,7 @@ var Root = (function () {
 
     log.info("Asset creating: " + asset.id);
     var payload = JSON.stringify(asset);
-    proxy.sendData(config.asset_directory_protocol, options, payload, res,
+    proxy.sendData(config.asset_directory_protocol, options, payload, undefined,
       function (status, e) {
         if (status == 201 || status == 204) {
           log.info("Asset created: " + this.assetId);
