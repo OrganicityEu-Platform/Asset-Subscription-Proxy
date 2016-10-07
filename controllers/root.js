@@ -154,7 +154,7 @@ var Root = (function () {
   }
 
   var chains = {
-    createOrUpdate : [getAccessToken, getAssetFromBody, create, update],
+    createOrUpdate : [getAccessToken, getAssetFromBody, update, create],
     remove : [getAccessToken, remove]
   };
 
