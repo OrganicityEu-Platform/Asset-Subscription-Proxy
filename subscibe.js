@@ -40,6 +40,6 @@ console.log('Subscribe now...');
 
 httpClient.sendData(config.orion_protocol, options, payloadString, undefined, function (status, responseText, headers) {
   console.log('Successful: ' + headers.location);
-}, function() {
-  console.log('ERROR');
+}, function(status, resp) {
+  console.log('ERROR', status, resp);
 });
