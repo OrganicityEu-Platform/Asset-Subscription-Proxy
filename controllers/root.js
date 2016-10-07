@@ -68,10 +68,7 @@ var Root = (function () {
         res.status(400).send(e);
       }.bind({assetId: req.params.assetId}),
       function (status, e) {
-        log.error(status);
-        log.error(e);
-        log.error(this.asset);
-        res.status(400).send(e);
+        next();
       }.bind({assetId: req.params.assetId, asset: req.asset})
     );
   };
@@ -147,8 +144,7 @@ var Root = (function () {
   }
 
   var chains = {
-    create : [getAccessToken, getAssetFromBody, create],
-    update : [getAccessToken, getAssetFromBody, update],
+    createOrUpdate : [getAccessToken, getAssetFromBody, create, update],
     remove : [getAccessToken, remove]
   };
 
