@@ -26,9 +26,12 @@ var Root = (function () {
   };
 
   var getAssetFromBody = function (req, res, next) {
+    console.log('### Get Asset from body');
     if (req.body.length > 0) {
       try {
         req.asset = JSON.parse(req.body);
+        console.log('Asset:');
+        console.log(req.asset);
         next();
       } catch (e) {
         log.error(e);
@@ -41,10 +44,15 @@ var Root = (function () {
 
   var update = function (req, res, next) {
 
+    console.log('### Try to update asset');
+
+    var asset_id = req.asset.id;
+    var asset_type = req.asset.type;
+
     var options = {
       host: config.asset_directory_host,
       port: config.asset_directory_port,
-      path: '/v2/entities/' + req.asset.id + '/attrs',
+      path: '/v2/entities/' + asset_id + '/attrs',
       method: 'POST',
       headers: proxy.getClientIp(req, req.headers)
     };
@@ -53,12 +61,10 @@ var Root = (function () {
     options.headers['authorization'] = 'Bearer ' + req.access_token;
 
     // Remove the id and type temporarly
-    var asset_id = req.asset.id;
-    var asset_type = req.asset.type;
     delete req.asset.id;
     delete req.asset.type;
 
-    log.info("Asset updating: " +  req.params.assetId);
+    log.info("Asset updating: " +  asset_id);
 
     var payload = JSON.stringify(req.asset);
     proxy.sendData(config.asset_directory_protocol, options, payload, res,
