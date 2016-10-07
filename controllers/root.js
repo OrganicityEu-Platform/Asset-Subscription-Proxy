@@ -29,9 +29,10 @@ var Root = (function () {
     console.log('### Get Asset from body');
     if (req.body.length > 0) {
       try {
-        req.asset = JSON.parse(req.body);
-        console.log('Asset:');
-        console.log(req.asset);
+        // On notification, Orions gets an array of Assets
+        req.assets = JSON.parse(req.body);
+        console.log('Assets:');
+        console.log(req.assets);
         next();
       } catch (e) {
         log.error(e);
@@ -42,12 +43,25 @@ var Root = (function () {
     res.status(400).send('Body is not allowed to be emty!');
   };
 
-  var update = function (req, res, next) {
+  var updateOrCreate = function (req, res, next) {
+    var i = 0;
+    var nextAsset = function() {
+      var asset = req.assets[i];
+      if(asset) {
+        i++;
+        updateAsset(asset, nextAsset);
+      } else {
+        res.status(200).send("All assets handled!");
+      }
+    }
+  };
+
+  var updateAsset = function(asset, callback) {
 
     console.log('### Try to update asset');
 
-    var asset_id = req.asset.id;
-    var asset_type = req.asset.type;
+    var asset_id = asset.id;
+    var asset_type = asset.type;
 
     var options = {
       host: config.asset_directory_host,
@@ -61,35 +75,35 @@ var Root = (function () {
     options.headers['authorization'] = 'Bearer ' + req.access_token;
 
     // Remove the id and type temporarly
-    delete req.asset.id;
-    delete req.asset.type;
+    delete asset.id;
+    delete asset.type;
 
     log.info("Asset updating: " +  asset_id);
 
-    var payload = JSON.stringify(req.asset);
+    var payload = JSON.stringify(asset);
     proxy.sendData(config.asset_directory_protocol, options, payload, res,
       function (status, e) {
         if (status == 201 || status == 204) {
           log.info("Asset updated: " + this.assetId);
-          res.status(200).send("Asset updated: " + this.assetId);
+          callback();
           return;
         }
         log.error(status);
         log.error(e);
-        res.status(400).send(e);
+        callback();
       }.bind({assetId: asset_id}),
       function (status, e) {
 
         // Reset the id and type
-        req.asset.id = asset_id;
-        req.asset.type = asset_type;
+        asset.id = asset_id;
+        asset.type = asset_type;
 
-        next();
+        createAsset(asset, callback);
       }
     );
   };
 
-  var create = function (req, res, next) {
+  var createAsset = function (asset, callback) {
     // options.path = req.url + 'v2/entities/' + assetId + '?type=' + type; //not implemented yet at Orion
     var options = {
       host: config.asset_directory_host,
@@ -102,25 +116,25 @@ var Root = (function () {
     // Add auth header
     options.headers['authorization'] = 'Bearer ' + req.access_token;
 
-    log.info("Asset creating: " + req.asset.id);
-    var payload = JSON.stringify(req.asset);
+    log.info("Asset creating: " + asset.id);
+    var payload = JSON.stringify(asset);
     proxy.sendData(config.asset_directory_protocol, options, payload, res,
       function (status, e) {
         if (status == 201 || status == 204) {
           log.info("Asset created: " + this.assetId);
-          res.status(200).send("Asset created:" + this.assetId);
+          callback();
           return;
         }
         log.error(status);
         log.error(e);
-        res.status(400).send(e);
-      }.bind({assetId: req.asset.id}),
+        callback();
+      }.bind({assetId: asset.id}),
       function (status, e) {
         log.error(status);
         log.error(e);
         log.error(this.asset);
-        res.status(400).send(e);
-      }.bind({assetId: req.asset.id, asset: req.asset})
+        callback();
+      }.bind({assetId: asset.id, asset: asset})
     );
   };
 
@@ -160,7 +174,7 @@ var Root = (function () {
   }
 
   var chains = {
-    createOrUpdate : [getAccessToken, getAssetFromBody, update, create],
+    createOrUpdate : [getAccessToken, getAssetFromBody, updateOrCreate],
     remove : [getAccessToken, remove]
   };
 
