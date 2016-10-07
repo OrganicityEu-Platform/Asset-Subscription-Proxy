@@ -29,13 +29,14 @@ var Root = (function () {
     if (req.body.length > 0) {
       try {
         req.asset = JSON.parse(req.body);
+        next();
       } catch (e) {
         log.error(e);
         res.status(400).send(e);
-        return;
       }
+      return;
     }
-    next();
+    res.status(400).send('Body is not allowed to be emty!');
   };
 
   var update = function (req, res, next) {
@@ -43,7 +44,7 @@ var Root = (function () {
     var options = {
       host: config.asset_directory_host,
       port: config.asset_directory_port,
-      path: '/v2/entities/' + req.params.assetId + '/attrs',
+      path: '/v2/entities/' + req.asset.id + '/attrs',
       method: 'POST',
       headers: proxy.getClientIp(req, req.headers)
     };
@@ -51,10 +52,14 @@ var Root = (function () {
     // Add auth header
     options.headers['authorization'] = 'Bearer ' + req.access_token;
 
-    log.info("Asset updating: " +  req.params.assetId);
-
+    // Remove the id and type temporarly
+    var asset_id = req.asset.id;
+    var asset_type = req.asset.type;
     delete req.asset.id;
     delete req.asset.type;
+
+    log.info("Asset updating: " +  req.params.assetId);
+
     var payload = JSON.stringify(req.asset);
     proxy.sendData(config.asset_directory_protocol, options, payload, res,
       function (status, e) {
@@ -66,10 +71,15 @@ var Root = (function () {
         log.error(status);
         log.error(e);
         res.status(400).send(e);
-      }.bind({assetId: req.params.assetId}),
+      }.bind({assetId: asset_id}),
       function (status, e) {
+
+        // Reset the id and type
+        req.asset.id = asset_id;
+        req.asset.type = asset_type;
+
         next();
-      }.bind({assetId: req.params.assetId, asset: req.asset})
+      }
     );
   };
 
@@ -112,7 +122,7 @@ var Root = (function () {
     var options = {
       host: config.asset_directory_host,
       port: config.asset_directory_port,
-      path: '/v2/entities',
+      path: '/v2/entities/' + req.params.assetId + '/attrs',
       method: 'DELETE',
       headers: proxy.getClientIp(req, req.headers)
     };
