@@ -169,9 +169,8 @@ var Root = (function () {
     // Add auth header
     options.headers['authorization'] = 'Bearer ' + req.access_token;
 
-    log.info("Asset deletion: " + req.asset.id);
-    var payload = JSON.stringify(req.asset);
-    proxy.sendData(config.asset_directory_protocol, options, payload, res,
+    log.info("Asset deletion: " + req.params.assetId);
+    proxy.sendData(config.asset_directory_protocol, options, undefined, res,
       function (status, e) {
         if (status == 201 || status == 204) {
           log.info("Asset deleted: " + this.assetId);
