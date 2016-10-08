@@ -180,13 +180,13 @@ var Root = (function () {
         log.error(status);
         log.error(e);
         res.status(400).send(e);
-      }.bind({assetId: req.asset.id}),
+      }.bind({assetId: req.params.assetId}),
       function (status, e) {
         log.error(status);
         log.error(e);
         log.error(this.asset);
         res.status(400).send(e);
-      }.bind({assetId: req.asset.id, asset: req.asset})
+      }.bind({assetId: req.params.assetId, asset: req.asset})
     );
 
   }
