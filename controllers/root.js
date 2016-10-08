@@ -161,7 +161,7 @@ var Root = (function () {
     var options = {
       host: config.asset_directory_host,
       port: config.asset_directory_port,
-      path: '/v2/entities/' + req.params.assetId + '/attrs',
+      path: '/v2/entities/' + req.params.assetId,
       method: 'DELETE',
       headers: proxy.getClientIp(req, req.headers)
     };
