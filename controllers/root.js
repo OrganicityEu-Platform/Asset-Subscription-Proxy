@@ -155,6 +155,9 @@ var Root = (function () {
   };
 
   var remove = function(req, res, next) {
+
+    console.log('### Remove asset');
+
     var options = {
       host: config.asset_directory_host,
       port: config.asset_directory_port,
