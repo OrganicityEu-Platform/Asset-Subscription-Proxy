@@ -20,4 +20,7 @@ config.orion_protocol = 'http';
 // Change this, if this proxy runs on a differnt machine.
 config.subscription_url = "http://localhost:" + config.proxy_port;
 
+// How often the orion should be send updates?
+config.subscription_throttling = 5;
+
 module.exports = config;

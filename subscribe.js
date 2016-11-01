@@ -19,7 +19,7 @@ var payloadJson = {
     }
   },
   "expires": "2018-04-05T14:00:00.00Z",
-  "throttling": 1
+  "throttling": config.subscription_throttling
 };
 
 var payloadString = JSON.stringify(payloadJson);
