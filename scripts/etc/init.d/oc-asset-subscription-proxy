@@ -1,0 +1,95 @@
+#!/bin/sh
+#
+# Organicity Asset-Subscription-Proxy startup script  
+#
+# chkconfig: 345 99 01
+# description: Organicity Asset-Subscription-Proxy startup script  
+
+export NAME=oc-asset-subscription-proxy
+export SOURCE_DIR=/opt/asset-subscription-proxy
+export SCRIPT=server.js
+export LOG_DIR=/var/log/organicity
+export PROCESSES_DIR=/opt/processes
+export PID_PATH="$PROCESSES_DIR/$NAME.pid"
+
+# Create folder for processes
+mkdir -p $LOG_DIR
+mkdir -p $PROCESSES_DIR
+
+# Change to source dir, since forever -sourceDir fails
+# See https://github.com/foreverjs/forever/issues/676
+cd $SOURCE_DIR
+
+get_pid()
+{
+    if [ -f $PID_PATH ]
+    then
+      read PID < $PID_PATH
+      if ps -p $PID > /dev/null
+      then
+        # RUNNING
+        echo "$PID"
+        return
+      else
+        # NOT RUNNING
+        rm $PID_PATH
+      fi
+    fi
+    echo "0"
+}
+
+# Get the PID.
+PID=$(get_pid)
+
+case "$1" in
+  start)
+    case "$PID" in
+      0)
+        echo "START $NAME"
+        forever start --pidFile $PID_PATH -a -o $LOG_DIR/$NAME.out -e $LOG_DIR/$NAME.err -l $LOG_DIR/$NAME$ $SCRIPT
+      ;;
+      *)
+        echo "$NAME is running already (PID $PID)"
+      ;;
+    esac
+  ;;
+  stop)
+    case "$PID" in
+      0)
+        echo "$NAME is not running"
+      ;;
+      *)
+        echo "STOP $NAME (PID $PID)"
+        forever stop --pidFile $PID_PATH $SCRIPT
+      ;;
+    esac
+  ;;
+  restart)
+   case "$PID" in
+      0)
+        echo "$NAME is not running"
+      ;;
+      *)
+        echo "RESTART $NAME (PID $PID)"
+        forever restart --pidFile $PID_PATH $SCRIPT
+      ;;
+    esac
+  ;;
+  status)
+    case "$PID" in
+      0)
+        echo "$NAME is not running"
+      ;;
+      *)
+        echo "$NAME is running (PID $PID)"
+      ;;
+    esac
+  ;;
+  *)
+    echo "Usage: /etc/init.d/$NAME {start|stop|restart|status}"
+    exit 1
+  ;;
+esac
+
+exit 0
+
