@@ -1,8 +1,13 @@
-var config = require('./config'),
-    fs = require('fs'),
+var config = require('./config');
+var opbeat = undefined;
+
+if(config.opbeat) {
+  opbeat = require('opbeat').start(config.opbeat);
+}
+
+var fs = require('fs'),
     https = require('https'),
-    Root = require('./controllers/root').Root,
-    errorhandler = require('errorhandler');
+    Root = require('./controllers/root').Root;
 
 var log = require('./lib/logger').logger.getLogger("Server");
 
@@ -29,8 +34,6 @@ app.use(function (req, res, next) {
     });
 });
 
-app.use(errorhandler({log: log.error}))
-
 app.use(function (req, res, next) {
     "use strict";
     res.header('Access-Control-Allow-Origin', '*');
@@ -54,6 +57,11 @@ app.set('port', port);
 
 app.post('/', Root.createOrUpdate);
 app.delete('/v2/entities/:assetId', Root.remove);
+
+if(config.opbeat) {
+  console.log('Use Opbeat error logging');
+  app.use(opbeat.middleware.express());
+}
 
 log.info('Starting Organicity Subscription Proxy in port ' + port + ' ...');
 app.listen(app.get('port'));

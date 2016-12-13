@@ -4,15 +4,16 @@
   "description": "Asset-subscription-proxy",
   "author": "Evangelos Theodoridis",
   "dependencies": {
+    "errorhandler": "1.x",
+    "escape-html": "1.0.3",
     "express": "4.x",
     "log4js": "0.6.x",
-    "escape-html": "1.0.3",
-    "xmlhttprequest": "1.8.0",
-    "errorhandler": "1.x",
-    "should":"~4.0.4",
-    "mocha":"~1.20.1",
-    "xml2json":"" 
-	},
+    "mocha": "~1.20.1",
+    "opbeat": "^4.0.0",
+    "should": "~4.0.4",
+    "xml2json": "",
+    "xmlhttprequest": "1.8.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/OrganicityEu/Asset-Subscription-Proxy"
@@ -21,6 +22,6 @@
     {
       "name": "Evangelos Theodoridis",
       "email": ""
-    } 
+    }
   ]
 }
