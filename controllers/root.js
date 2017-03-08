@@ -17,14 +17,15 @@ var Root = (function () {
 
     //check if there was any previous token
     if (lastTime != null && access_token != null) {
-      timeDiff = new Date().getTime() - lastTime.getTime();
-      var remainingTime = CACHE_MINUTES * SECONDS_IN_MINUTE * MILLIS_IN_SECOND - timeDiff;
-      log.debug("Remaining Time for token refresh:" + remainingTime);
+      timeDiff = new Date().getTime() / 1000 - lastTime.getTime() / 1000;
+      var remainingTime = CACHE_MINUTES * SECONDS_IN_MINUTE - timeDiff;
+      log.debug(parseInt(remainingTime) + " seconds remaining for Access Token refresh.");
       //token is kept for 4 minutes
       if (remainingTime > 0) {
         log.debug("Access Token is cached, proceeding to next call");
         req.access_token = access_token;
         next();
+        return;
       }
     }
     var options = {
