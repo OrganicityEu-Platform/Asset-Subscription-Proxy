@@ -52,15 +52,15 @@ var Root = (function () {
   };
 
   var getAssetFromBody = function (req, res, next) {
-    console.log('### Get Asset from body');
+    log.debug('### Get Asset from body');
     if (req.body.length > 0) {
       try {
         // On notification, Orions gets an array of Assets
         var body = JSON.parse(req.body);
         if (body != undefined && body.data != undefined && body.data.length >= 1) {
           req.assets = body.data;
-          //console.log('Assets:', req.assets);
-          console.log('#Assets:', req.assets.length);
+          //log.debug('Assets:', req.assets);
+          log.debug('#Assets:', req.assets.length);
           next();
           return;
         } else {
@@ -81,12 +81,12 @@ var Root = (function () {
     var nextAsset = function() {
       var asset = req.assets[i];
       if(asset) {
-        console.log('Handle asset #' + i);
-        //console.log(asset);
+        log.debug('Handle asset #' + i);
+        //log.debug(asset);
         i++;
         updateAsset(asset, req, nextAsset);
       } else {
-        console.log('All assets handled!');
+        log.debug('All assets handled!');
         res.status(200).send("All assets handled!");
       }
     }
@@ -95,7 +95,7 @@ var Root = (function () {
 
   var updateAsset = function(asset, req, callback) {
 
-    console.log('### Try to update asset');
+    log.debug('### Try to update asset');
 
     var asset_id = asset.id;
     var asset_type = asset.type;
@@ -131,7 +131,7 @@ var Root = (function () {
       }.bind({assetId: asset_id}),
       function (status, e) {
 
-        console.log('Update failed.');
+        log.debug('Update failed.');
 
         // Reset the id and type
         asset.id = asset_id;
@@ -144,7 +144,7 @@ var Root = (function () {
 
   var createAsset = function (asset, req, callback) {
 
-    console.log('### Try to create asset');
+    log.debug('### Try to create asset');
 
     // options.path = req.url + 'v2/entities/' + assetId + '?type=' + type; //not implemented yet at Orion
     var options = {
@@ -182,7 +182,7 @@ var Root = (function () {
 
   var remove = function(req, res, next) {
 
-    console.log('### Remove asset');
+    log.debug('### Remove asset');
 
     var options = {
       host: config.asset_directory_host,
@@ -222,7 +222,7 @@ var Root = (function () {
     remove : [getAccessToken, remove]
   };
 
-  //console.log(chains);
+  //log.debug(chains);
   return chains;
 })();
 
