@@ -59,7 +59,7 @@ app.post('/', Root.createOrUpdate);
 app.delete('/v2/entities/:assetId', Root.remove);
 
 if(config.opbeat) {
-  console.log('Use Opbeat error logging');
+  log.debug('Use Opbeat error logging');
   app.use(opbeat.middleware.express());
 }
 
