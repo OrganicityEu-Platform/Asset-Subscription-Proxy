@@ -2,10 +2,29 @@ var config = require('./../config.js'),
     proxy = require('./../lib/HTTPClient.js');
 var log = require('./../lib/logger').logger.getLogger("Organicity-subscription-proxy");
 
+var MILLIS_IN_SECOND = 1000;
+var SECONDS_IN_MINUTE = 60;
+var CACHE_MINUTES = 4;
+//Last time the token was updated
+var lastTime = null;
+//The last access token
+var access_token = null;
+
 var Root = (function () {
 
   // Get the Access Token
   var getAccessToken = function(req, res, next) {
+
+    //check if there was any previous token
+    if (lastTime != null && access_token != null) {
+      timeDiff = new Date() - lastTime;
+      //token is kept for 4 minutes
+      if (timeDiff /= MILLIS_IN_SECOND < CACHE_MINUTES * SECONDS_IN_MINUTE) {
+        log.debug("Access Token is cached, proceeding to next call");
+        req.access_token = access_token;
+        next();
+      }
+    }
     var options = {
       host: 'accounts.organicity.eu', // 31.200.243.82
       port: '443',
@@ -21,6 +40,9 @@ var Root = (function () {
     proxy.sendData('https', options, payload, res, function (status, responseText) {
       var token = JSON.parse(responseText);
       req.access_token = token.access_token;
+      //save token cache
+      lastTime = new Date();
+      access_token = token.access_token;
       next();
     });
   };
