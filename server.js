@@ -58,6 +58,17 @@ app.set('port', port);
 app.post('/', Root.createOrUpdate);
 app.delete('/v2/entities/:assetId', Root.remove);
 
+app.get('/test', function(req, res, next) {
+  console.log('test called');
+  //console.log(test);
+
+  var err = new Error('Ups, something broke!')
+  opbeat.captureError(err)
+
+  res.status(200).send('test ok');
+});
+
+
 if(config.opbeat) {
   console.log('Use Opbeat error logging');
   app.use(opbeat.middleware.express());
