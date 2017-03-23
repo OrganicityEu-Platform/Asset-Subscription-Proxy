@@ -2,10 +2,32 @@ var config = require('./../config.js'),
     proxy = require('./../lib/HTTPClient.js');
 var log = require('./../lib/logger').logger.getLogger("Organicity-subscription-proxy");
 
+var MILLIS_IN_SECOND = 1000;
+var SECONDS_IN_MINUTE = 60;
+var CACHE_MINUTES = 4;
+//Last time the token was updated
+var lastTime = null;
+//The last access token
+var access_token = null;
+
 var Root = (function () {
 
   // Get the Access Token
   var getAccessToken = function(req, res, next) {
+
+    //check if there was any previous token
+    if (lastTime != null && access_token != null) {
+      timeDiff = new Date().getTime() / 1000 - lastTime.getTime() / 1000;
+      var remainingTime = CACHE_MINUTES * SECONDS_IN_MINUTE - timeDiff;
+      log.debug(parseInt(remainingTime) + " seconds remaining for Access Token refresh.");
+      //token is kept for 4 minutes
+      if (remainingTime > 0) {
+        log.debug("Access Token is cached, proceeding to next call");
+        req.access_token = access_token;
+        next();
+        return;
+      }
+    }
     var options = {
       host: 'accounts.organicity.eu', // 31.200.243.82
       port: '443',
@@ -21,20 +43,24 @@ var Root = (function () {
     proxy.sendData('https', options, payload, res, function (status, responseText) {
       var token = JSON.parse(responseText);
       req.access_token = token.access_token;
+      //save token cache
+      log.debug("Updated Access Token.")
+      lastTime = new Date();
+      access_token = token.access_token;
       next();
     });
   };
 
   var getAssetFromBody = function (req, res, next) {
-    console.log('### Get Asset from body');
+    log.debug('### Get Asset from body');
     if (req.body.length > 0) {
       try {
         // On notification, Orions gets an array of Assets
         var body = JSON.parse(req.body);
         if (body != undefined && body.data != undefined && body.data.length >= 1) {
           req.assets = body.data;
-          //console.log('Assets:', req.assets);
-          console.log('#Assets:', req.assets.length);
+          //log.debug('Assets:', req.assets);
+          log.debug('#Assets:', req.assets.length);
           next();
           return;
         } else {
@@ -55,12 +81,12 @@ var Root = (function () {
     var nextAsset = function() {
       var asset = req.assets[i];
       if(asset) {
-        console.log('Handle asset #' + i);
-        //console.log(asset);
+        log.debug('Handle asset #' + i);
+        //log.debug(asset);
         i++;
         updateAsset(asset, req, nextAsset);
       } else {
-        console.log('All assets handled!');
+        log.debug('All assets handled!');
         res.status(200).send("All assets handled!");
       }
     }
@@ -69,7 +95,7 @@ var Root = (function () {
 
   var updateAsset = function(asset, req, callback) {
 
-    console.log('### Try to update asset');
+    log.debug('### Try to update asset');
 
     var asset_id = asset.id;
     var asset_type = asset.type;
@@ -105,7 +131,7 @@ var Root = (function () {
       }.bind({assetId: asset_id}),
       function (status, e) {
 
-        console.log('Update failed.');
+        log.debug('Update failed.');
 
         // Reset the id and type
         asset.id = asset_id;
@@ -118,7 +144,7 @@ var Root = (function () {
 
   var createAsset = function (asset, req, callback) {
 
-    console.log('### Try to create asset');
+    log.debug('### Try to create asset');
 
     // options.path = req.url + 'v2/entities/' + assetId + '?type=' + type; //not implemented yet at Orion
     var options = {
@@ -156,7 +182,7 @@ var Root = (function () {
 
   var remove = function(req, res, next) {
 
-    console.log('### Remove asset');
+    log.debug('### Remove asset');
 
     var options = {
       host: config.asset_directory_host,
@@ -196,7 +222,7 @@ var Root = (function () {
     remove : [getAccessToken, remove]
   };
 
-  //console.log(chains);
+  //log.debug(chains);
   return chains;
 })();
 

@@ -70,7 +70,7 @@ app.get('/test', function(req, res, next) {
 
 
 if(config.opbeat) {
-  console.log('Use Opbeat error logging');
+  log.debug('Use Opbeat error logging');
   app.use(opbeat.middleware.express());
 }
 
