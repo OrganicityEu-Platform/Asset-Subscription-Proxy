@@ -36,8 +36,6 @@ if (fs.existsSync(subFile)) {
 	});
 
 } else {
-	console.log('Subscribe now...');
-
 	var payloadJson = {
 	  "subject": {
 		"entities": [
@@ -58,6 +56,9 @@ if (fs.existsSync(subFile)) {
 	  "expires": "2018-04-05T14:00:00.00Z",
 	  "throttling": config.subscription_throttling
 	};
+
+	console.log('Subscribe now...');
+	console.log(payloadJson);
 
 	var payloadString = JSON.stringify(payloadJson);
 
