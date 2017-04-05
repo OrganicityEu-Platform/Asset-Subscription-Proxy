@@ -58,7 +58,7 @@ if (fs.existsSync(subFile)) {
 	};
 
 	console.log('Subscribe now...');
-	console.log(payloadJson);
+
 
 	var payloadString = JSON.stringify(payloadJson);
 
@@ -73,6 +73,10 @@ if (fs.existsSync(subFile)) {
 		'Fiware-Service' : 'organicity'
 	  }
 	};
+
+	console.log('config.orion_protocol', 	payloadString);
+	console.log('options', 								options);
+	console.log('payloadString', 					payloadString);
 
 	httpClient.sendData(config.orion_protocol, options, payloadString, undefined, function (status, responseText, headers) {
 	  console.log('Successful: ' + headers.location);
