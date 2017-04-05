@@ -59,7 +59,6 @@ if (fs.existsSync(subFile)) {
 
 	console.log('Subscribe now...');
 
-
 	var payloadString = JSON.stringify(payloadJson);
 
 	var options = {
@@ -74,7 +73,7 @@ if (fs.existsSync(subFile)) {
 	  }
 	};
 
-	console.log('config.orion_protocol', 	payloadString);
+	console.log('config.orion_protocol', 	config.orion_protocol);
 	console.log('options', 								options);
 	console.log('payloadString', 					payloadString);
 
