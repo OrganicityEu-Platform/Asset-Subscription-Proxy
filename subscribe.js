@@ -41,7 +41,7 @@ if (fs.existsSync(subFile)) {
 		"entities": [
 		  {
 			"idPattern": ".*",
-			"type" : ".*"
+			"typePattern": ".*"
 		  }
 		],
 		"condition": {
