@@ -13,24 +13,15 @@ config.asset_directory_port = '443';
 config.asset_directory_protocol = 'https';
 
 // Configure your Orion here
-config.orion_host = 'localhost';
+config.orion_host = 'orion';
 config.orion_port = 1026;
 config.orion_protocol = 'http';
 
 // Change this, if this proxy runs on a differnt machine.
-config.subscription_url = "http://localhost:" + config.proxy_port;
+config.subscription_url = "http://asset-subscription-proxy:" + config.proxy_port;
 
 // How often the orion should be send updates?
 config.subscription_throttling = 5;
 
-/*
-config.opbeat = {
-  appId: '<app id>',
-  organizationId: '<org id>',
-  secretToken: '<token>',
-  active: true,
-  instrument : true
-};
-*/
-
 module.exports = config;
+
