@@ -14,6 +14,7 @@ var Root = (function () {
 
   // Get the Access Token
   var getAccessToken = function(req, res, next) {
+    console.log('# Access token');
 
     //check if there was any previous token
     if (lastTime != null && access_token != null) {
@@ -44,7 +45,7 @@ var Root = (function () {
       var token = JSON.parse(responseText);
       req.access_token = token.access_token;
       //save token cache
-      log.debug("Updated Access Token.")
+      log.debug("New Access Token acquired.")
       lastTime = new Date();
       access_token = token.access_token;
       next();
@@ -60,7 +61,7 @@ var Root = (function () {
         if (body != undefined && body.data != undefined && body.data.length >= 1) {
           req.assets = body.data;
           //log.debug('Assets:', req.assets);
-          log.debug('#Assets:', req.assets.length);
+          log.debug('No of assets:', req.assets.length);
           next();
           return;
         } else {
@@ -132,6 +133,7 @@ var Root = (function () {
       function (status, e) {
 
         log.debug('Update failed.');
+        log.debug(e);
 
         // Reset the id and type
         asset.id = asset_id;
